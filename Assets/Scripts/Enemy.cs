@@ -19,17 +19,13 @@ public class Enemy : MonoBehaviour
     public string enemyName;
     public string baseAttack;
     public int moveSpeed;
-    Animator anim;
+
 
     private void Awake()
     {
         health = maxHealth.initialValue;
     }
-    void Start()
-    {
-        anim = GetComponent<Animator>();
-    }
-
+  
     // Update is called once per frame
     void Update()
     {

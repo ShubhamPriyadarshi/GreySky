@@ -42,7 +42,7 @@ public class Knockback : MonoBehaviour
                 {
                     
                     hit.GetComponent<PlayerMovement>().currentState = PlayerState.stagger;
-                    obj.GetComponent <PlayerMovement>().Knock(knockTime);
+                    obj.GetComponent <PlayerMovement>().Knock(knockTime, damage);
                 }
                 
               

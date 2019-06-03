@@ -3,19 +3,24 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public enum PlayerState {
+    idle,
     walk,
     attack,
-    interact
+    interact,
+    stagger
 }
 
 public class PlayerMovement : MonoBehaviour
 {
     [SerializeField] public float speed = 10;
     private Rigidbody2D rgBody;
+  
     private Vector2 change;
     private Vector2 pos;
     private Animator anim;
     public PlayerState currentState;
+    public FloatValue currentHealth;
+    public Signl playerHealthSignal;
 
     private enum DiagonalDirection
     {
@@ -26,6 +31,7 @@ public class PlayerMovement : MonoBehaviour
 
     void Start()
     {
+        currentHealth.initialValue = 100;
         dir = DiagonalDirection.Down;
         currentState = PlayerState.walk;
         anim = GetComponent<Animator>();
@@ -51,11 +57,11 @@ public class PlayerMovement : MonoBehaviour
             FindDir();
             anim.SetInteger("attackDir", (int)dir);
         }
-        if (Input.GetButtonDown("Attack") && currentState != PlayerState.attack)
+        if (Input.GetButtonDown("Attack") && currentState != PlayerState.attack && currentState != PlayerState.stagger)
         {
             StartCoroutine(AttackCo());
         }
-        else if (currentState == PlayerState.walk)
+        else if (currentState == PlayerState.walk || currentState == PlayerState.idle)
         {
             UpdateAndMove();
         }
@@ -70,7 +76,7 @@ public class PlayerMovement : MonoBehaviour
         anim.SetBool("attacking", false);
 
         yield return new WaitForSeconds(0.2f);
-        currentState = PlayerState.walk;
+        currentState = PlayerState.idle;
 
     }
 
@@ -79,6 +85,7 @@ public class PlayerMovement : MonoBehaviour
 
         if (change != Vector2.zero)
         {
+            currentState = PlayerState.walk;
             MoveCharacter();
             FindDiag();
             anim.SetFloat("moveX", change.x);
@@ -88,7 +95,7 @@ public class PlayerMovement : MonoBehaviour
         else
         {
             anim.SetBool("moving", false);
-
+            currentState = PlayerState.idle;
         }
     }
 
@@ -163,6 +170,26 @@ public class PlayerMovement : MonoBehaviour
 
 
         }
+    public void Knock(float knockTime, float damage)
+    {
+        currentHealth.initialValue -= damage;
+        if (currentHealth.initialValue > 0)
+        {
+            playerHealthSignal.Raise();
+            StartCoroutine(KnockCo(knockTime));
+        }
     }
+
+    private IEnumerator KnockCo(float knockTime)
+    {
+        if (rgBody != null)
+        {
+            yield return new WaitForSeconds(knockTime);
+            rgBody.velocity = Vector2.zero;
+            rgBody.GetComponent<PlayerMovement>().currentState = PlayerState.idle;
+            //enemy.isKinematic = true;
+        }
+    }
+}
 
 
